@@ -1,0 +1,10 @@
+{
+  "extends": "airbnb-base",
+  "rules": {
+    "space-before-function-paren": ["error", "always"],
+    "import/extensions": [2, "ignorePackages"]
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  }
+}

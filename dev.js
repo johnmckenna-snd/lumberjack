@@ -4,7 +4,21 @@ configureLogger({
   logToConsole: true,
   logToFiles: false,
   lokiConfig: {
-    sendLogs: true,
+    sendLogs: false,
+    host: process.env.LOKI_HOST,
+    username: process.env.LOKI_USERNAME,
+    apiKey: process.env.LOKI_API_KEY,
+    logCacheLimit: 10,
+  },
+  logLevel: 'silly',
+  service: 'lumberjack-dev-test',
+});
+
+configureLogger({
+  logToConsole: true,
+  logToFiles: false,
+  lokiConfig: {
+    sendLogs: false,
     host: process.env.LOKI_HOST,
     username: process.env.LOKI_USERNAME,
     apiKey: process.env.LOKI_API_KEY,

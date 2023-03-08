@@ -16,7 +16,7 @@ const globalEnv = {
 
 /**
  * Sets the global options for the logger.
- * It can be called more than once, but you are mutating your global config!
+ * It can be called more than once, but you won't change anything!
  *
  * You should definitely call configureLogger() before beginLogging().
  * Haven't you seen Ax Men? This is dangerous work!

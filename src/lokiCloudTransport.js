@@ -1,6 +1,5 @@
 import Transport from 'winston-transport';
 import { inspect } from 'util';
-import { v4 as uuidv4 } from 'uuid';
 
 import { logCacheEmitter } from './logCache.js';
 

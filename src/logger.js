@@ -47,9 +47,28 @@ export function configureLogger ({
   if (!Object.isFrozen(globalEnv)) {
     globalEnv.logLevel = logLevel;
     globalEnv.logToConsole = logToConsole;
-    globalEnv.lokiConfig = lokiConfig;
     globalEnv.logToFiles = logToFiles;
     globalEnv.service = service;
+
+    let newLokiConfig = { ...lokiConfig };
+
+    // the cache likes positive numbers
+    if (lokiConfig.logCacheLimit <= 0 || typeof lokiConfig.logCacheLimit !== 'number') {
+      console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\n lokiConfig.logCacheLimit is not a number greater than 0 setting to the default of 10.`);
+      newLokiConfig = {
+        ...newLokiConfig,
+        logCacheLimit: 10,
+      };
+    }
+    // we want to make sure this is false not some other falsy type
+    if (!lokiConfig.sendLogs) {
+      newLokiConfig = {
+        ...newLokiConfig,
+        sendLogs: false,
+      };
+    }
+
+    globalEnv.lokiConfig = newLokiConfig;
   }
 
   // we only want to set the globalEnv values once
@@ -139,7 +158,7 @@ export function beginLogging ({
     || !globalEnv.logToConsole
     || !globalEnv.service
   ) {
-    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has not been set by calling configureLogger()\nPlease set at least: \n   logLevel\n   logToConsole\nFor now defaults are being set of logToConsole=true and logLevel=silly.\n`);
+    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has not been set by calling configureLogger()\nPlease set at least: \n   logLevel\n   logToConsole\nFor now defaults are being set of logToConsole=true, logLevel=silly, and service = 'my-saucy-logger'.\n`);
   }
   // default to silly in case there's no config
   const level = logLevel || globalEnv.logLevel || 'silly';
@@ -150,13 +169,15 @@ export function beginLogging ({
   // default to true
   const toConsole = logToConsole || globalEnv.logToConsole || true;
 
+  const service = globalEnv.service || 'my-saucy-logger';
+
   if (!toFiles && !globalEnv.lokiConfig && !toConsole) {
-    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nPick one:\nlogLevel must be !production \nOr logToFiles as true \nOr have a lokiConfig\n\nOtherwise the winston doesn't know what to do with it's life. \n`);
+    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nPick one:\nlogToConsole must be true \nOr logToFiles as true \nOr have a lokiConfig\n\nOtherwise the winston doesn't know what to do with it's life. \n`);
   }
 
   const logger = createLogger({
     level,
-    defaultMeta: { service: globalEnv.service },
+    defaultMeta: { service },
   });
 
   // deliberately not using NODE_ENV to eliminate unwanted consequences
@@ -196,7 +217,7 @@ export function beginLogging ({
         splat(),
         format.json(),
       ),
-      labels: { app: globalEnv.service },
+      labels: { app: service },
     }));
   }
 

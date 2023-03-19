@@ -5,17 +5,18 @@ import util from 'util';
 
 import LokiCloudTransport from './lokiCloudTransport.js';
 
-// These variables are mutated by configureLogger() and beginLogging() if
-// configureLogger() hasn't been called.
-let globalLogLevel = null;
-let globalLogToConsole = false;
-let globalLokiConfig = null;
-let globalService = null;
-let globalLogToFiles = false;
+// this object will be locked the first time it's set by configureLogger()
+const globalEnv = {
+  logLevel: null,
+  logToConsole: false,
+  lokiConfig: null,
+  service: null,
+  logToFiles: false,
+};
 
 /**
  * Sets the global options for the logger.
- * It can be called more than once, but you are mutating your global config!
+ * It can be called more than once, but you won't change anything!
  *
  * You should definitely call configureLogger() before beginLogging().
  * Haven't you seen Ax Men? This is dangerous work!
@@ -40,21 +41,48 @@ export function configureLogger ({
   logToFiles,
 }) {
   // You may not want to call configureLogger twice!
-  if (
-    globalLogLevel
-    || globalLogToConsole
-    || globalLokiConfig
-    || globalService
-    || globalLogToFiles
-  ) {
-    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has been set twice. Beware stuff is changing!\n`);
+  if (Object.isFrozen(globalEnv)) {
+    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has been called twice. Don't worry you can't change it after it's been set, but I wanted to let you know you tried.\n`);
   }
-  // Set Global config. I know I know it's a function mutating state.
-  globalLogLevel = logLevel;
-  globalLogToConsole = logToConsole;
-  globalLokiConfig = lokiConfig;
-  globalService = service;
-  globalLogToFiles = logToFiles;
+
+  if (!Object.isFrozen(globalEnv)) {
+    globalEnv.logLevel = logLevel;
+    globalEnv.logToConsole = logToConsole;
+    globalEnv.logToFiles = logToFiles;
+    globalEnv.service = service;
+
+    let newLokiConfig = { ...lokiConfig };
+
+    // the cache likes positive numbers
+    if (lokiConfig.logCacheLimit <= 0 || typeof lokiConfig.logCacheLimit !== 'number') {
+      console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\n lokiConfig.logCacheLimit is not a number greater than 0 setting to the default of 10.`);
+      newLokiConfig = {
+        ...newLokiConfig,
+        logCacheLimit: 10,
+      };
+    }
+    // we want to make sure this is false not some other falsy type
+    if (!lokiConfig.sendLogs) {
+      newLokiConfig = {
+        ...newLokiConfig,
+        sendLogs: false,
+      };
+    }
+
+    // we can't log without the host, apiKey, and username
+    // so we'll turn off loki transport
+    if (!lokiConfig.apiKey || !lokiConfig.host || !lokiConfig.username) {
+      newLokiConfig = {
+        ...newLokiConfig,
+        sendLogs: false,
+      };
+    }
+
+    globalEnv.lokiConfig = newLokiConfig;
+  }
+
+  // we only want to set the globalEnv values once
+  Object.freeze(globalEnv);
 }
 
 const { printf } = format;
@@ -101,6 +129,11 @@ export const hawtFormat = printf(({
   return message;
 });
 
+/**
+ * Logger middleware
+ * Intercepts the message and adds an id to it.
+ */
+
 const {
   combine,
   label,
@@ -131,28 +164,30 @@ export function beginLogging ({
 }) {
   // You probably want to call configureLogger() before beginLogging()
   if (
-    !globalLogLevel
-    || !globalLogToConsole
-    || !globalService
+    !globalEnv.logLevel
+    || !globalEnv.logToConsole
+    || !globalEnv.service
   ) {
-    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has not been set by calling configureLogger()\nPlease set at least: \n   logLevel\n   logToConsole\nFor now defaults are being set of logToConsole=true and logLevel=silly.\n`);
+    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nGlobal Configuration has not been set by calling configureLogger()\nPlease set at least: \n   logLevel\n   logToConsole\nFor now defaults are being set of logToConsole=true, logLevel=silly, and service = 'my-saucy-logger'.\n`);
   }
   // default to silly in case there's no config
-  const level = logLevel || globalLogLevel || 'silly';
+  const level = logLevel || globalEnv.logLevel || 'silly';
 
   // default to no log to files
-  const toFiles = logToFiles || globalLogToFiles || false;
+  const toFiles = logToFiles || globalEnv.logToFiles || false;
 
   // default to true
-  const toConsole = logToConsole || globalLogToConsole || true;
+  const toConsole = logToConsole || globalEnv.logToConsole || true;
 
-  if (!toFiles && !globalLokiConfig && !toConsole) {
-    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nPick one:\nlogLevel must be !production \nOr logToFiles as true \nOr have a lokiConfig\n\nOtherwise the winston doesn't know what to do with it's life. \n`);
+  const service = globalEnv.service || 'my-saucy-logger';
+
+  if (!toFiles && !globalEnv.lokiConfig && !toConsole) {
+    console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\nPick one:\nlogToConsole must be true \nOr logToFiles as true \nOr have a lokiConfig\n\nOtherwise the winston doesn't know what to do with it's life. \n`);
   }
 
   const logger = createLogger({
     level,
-    defaultMeta: { service: globalService },
+    defaultMeta: { service },
   });
 
   // deliberately not using NODE_ENV to eliminate unwanted consequences
@@ -173,13 +208,13 @@ export function beginLogging ({
     logger.add(new transports.File({ filename: 'combined.log' }));
   }
 
-  if (globalLokiConfig && globalLokiConfig.sendLogs) {
+  if (globalEnv.lokiConfig && globalEnv.lokiConfig.sendLogs) {
     const {
       host,
       username,
       apiKey,
       logCacheLimit,
-    } = globalLokiConfig;
+    } = globalEnv.lokiConfig;
     logger.add(new LokiCloudTransport({
       host,
       username,
@@ -192,7 +227,7 @@ export function beginLogging ({
         splat(),
         format.json(),
       ),
-      labels: { app: globalService },
+      labels: { app: service },
     }));
   }
 

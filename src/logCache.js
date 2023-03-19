@@ -13,7 +13,6 @@ async function addToCache (log) {
   logCache.push(log);
 
   if (logCache.length >= globalLogCacheLimit) {
-    console.log('cache limit hit!');
     const toSend = logCache;
 
     // preemptively clear cache

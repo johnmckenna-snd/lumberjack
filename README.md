@@ -27,7 +27,7 @@ If `lokiConfig.apiKey`, `lokiConfig.host`, or `lokiConfig.username` are not incl
 | -------------------------- | ------- | -------- | -------------------------------------------------- |
 | `logToConsole`             | Boolean | No       | Should lumberjack log to the console?              |
 | `logToFiles`               | Boolean | No       | Should lumberjack log to the file system? It logs to two files any error messages to `./error.log` and any other messages (less sever than error) to `./combined.log`. |
-| `logLevel`                 | Enum    | No       | `'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly'` The default is `silly`|
+| `logLevel`                 | Enum    | No       | `'error','warn', 'info', 'http', 'verbose', 'debug', 'silly'` The default is `silly`|
 | `service`                  | String  | No       | The name of the service to include this is included in the metadata that is sent to Loki so it is queryable. Default is `my-saucy-logger`  |
 | -------------------------- | ------- | -------- | -------------------------------------------------- |
 | `lokiConfig`               | Object  | No       | Configuration for Loki.                            |

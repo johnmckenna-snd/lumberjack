@@ -4,7 +4,7 @@ It logs.
 
 You can configure lumberjack to log to the console, files, and Loki. It uses winston for logging and axios for http transport.
 
-This package has a custom Loki integration to specifically integrate with the Grafana Cloud API ([winston-loki](https://github.com/JaniAnttonen/winston-loki) has problems with authenticating to Grafana Cloud). The Loki integration also includes a cache that holds messages and sends them in groups to the Grafana endpoint.
+This package has a custom Loki integration to specifically integrate with the Grafana Cloud API ([winston-loki](https://github.com/JaniAnttonen/winston-loki) has problems with authenticating to Grafana Cloud). The Loki integration also includes a cache that holds messages and sends them in groups to the Grafana endpoint. Being a cloud native, I haven't checked this against a local Loki instance 😭.
 
 ## usage
 
@@ -20,7 +20,7 @@ The logger can be configured only once. Once `configureLogger()` is called the s
 
 Configuration is passed as an object to `configureLogger()`. None of the parameters are explicitly required, but you should specify at least one option as true. If you don't specify at least one [winston](https://github.com/winstonjs/winston) will store the logs in memory which may not be what you wanted.
 
-If `lokiConfig.apiKey`, `lokiConfig.host`, or `lokiConfig.username` is not included Loki Transport is turned off.
+If `lokiConfig.apiKey`, `lokiConfig.host`, or `lokiConfig.username` are not included, Loki Transport is turned off.
 
 #### parameters
 | name                       | type    | required | description                                        |
@@ -56,3 +56,13 @@ configureLogger({
   service: 'lumberjack-dev-test',
 });
 ```
+
+## contributing
+
+If you like this and want to contribute, well sweet. Just slap up a pr.
+
+### to-do & desires
+
+ - Tests
+ - Typescript
+ - Handle shutdown in some fashion

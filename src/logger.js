@@ -6,7 +6,7 @@ import util from 'util';
 import LokiCloudTransport from './lokiCloudTransport.js';
 
 // this object will be locked the first time it's set by configureLogger()
-const globalEnv = {
+export const globalEnv = {
   logLevel: null,
   logToConsole: false,
   lokiConfig: null,
@@ -53,29 +53,31 @@ export function configureLogger ({
 
     let newLokiConfig = { ...lokiConfig };
 
+    if (lokiConfig) {
     // the cache likes positive numbers
-    if (lokiConfig.logCacheLimit <= 0 || typeof lokiConfig.logCacheLimit !== 'number') {
-      console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\n lokiConfig.logCacheLimit is not a number greater than 0 setting to the default of 10.`);
-      newLokiConfig = {
-        ...newLokiConfig,
-        logCacheLimit: 10,
-      };
-    }
-    // we want to make sure this is false not some other falsy type
-    if (!lokiConfig.sendLogs) {
-      newLokiConfig = {
-        ...newLokiConfig,
-        sendLogs: false,
-      };
-    }
+      if (lokiConfig.logCacheLimit <= 0 || typeof lokiConfig.logCacheLimit !== 'number') {
+        console.error(`\n${chalk.redBright('----LUMBERJACK MISCONFIGURATION----')}\n lokiConfig.logCacheLimit is not a number greater than 0 setting to the default of 10.`);
+        newLokiConfig = {
+          ...newLokiConfig,
+          logCacheLimit: 10,
+        };
+      }
+      // we want to make sure this is false not some other falsy type
+      if (!lokiConfig.sendLogs) {
+        newLokiConfig = {
+          ...newLokiConfig,
+          sendLogs: false,
+        };
+      }
 
-    // we can't log without the host, apiKey, and username
-    // so we'll turn off loki transport
-    if (!lokiConfig.apiKey || !lokiConfig.host || !lokiConfig.username) {
-      newLokiConfig = {
-        ...newLokiConfig,
-        sendLogs: false,
-      };
+      // we can't log without the host, apiKey, and username
+      // so we'll turn off loki transport
+      if (!lokiConfig.apiKey || !lokiConfig.host || !lokiConfig.username) {
+        newLokiConfig = {
+          ...newLokiConfig,
+          sendLogs: false,
+        };
+      }
     }
 
     globalEnv.lokiConfig = newLokiConfig;

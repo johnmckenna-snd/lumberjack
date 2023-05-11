@@ -9,6 +9,10 @@ let logCache = [];
 let globalLogCacheLimit = 10;
 let globalURL = '';
 
+function getLogCache () {
+  return logCache;
+}
+
 async function addToCache (log) {
   logCache.push(log);
 
@@ -46,5 +50,4 @@ logCacheEmitter.on('instantiate', ({ logCacheLimit, url }) => {
 // addToCache just runs as it will we don't wait for this promise to resolve
 logCacheEmitter.on('log', addToCache);
 
-// eslint-disable-next-line import/prefer-default-export
-export { logCacheEmitter };
+export { logCacheEmitter, getLogCache };

@@ -38,6 +38,9 @@ If `lokiConfig.apiKey`, `lokiConfig.host`, or `lokiConfig.username` are not incl
 | `lokiConfig.logCacheLimit` | Number  | No       | Sets how many logs are stored before the transport sends them. Default is `10` |
 
 #### example
+
+**Logger Configuration**
+
 ```js
 import { configureLogger } from '@sndwrks/lumberjack';
 
@@ -55,6 +58,22 @@ configureLogger({
   logLevel: 'silly',
   service: 'lumberjack-dev-test',
 });
+```
+
+**Logging**
+
+```js
+import { beginLogging } from '@sndwrks/lumberjack';
+
+const logger = beginLogging({ name: 'myImportantFile.js' });
+
+logger.error();
+logger.warn();
+logger.info();
+logger.http();
+logger.verbose();
+logger.debug();
+logger.silly();
 ```
 
 ## contributing

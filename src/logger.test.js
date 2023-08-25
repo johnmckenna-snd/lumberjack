@@ -8,7 +8,10 @@ import { configureLogger, beginLogging, globalEnv } from './logger.js';
 let logger;
 
 const config = {
-  logToConsole: true,
+  logToConsole: {
+    enabled: true,
+    type: 'pretty',
+  },
   logLevel: 'silly',
   service: 'test',
   logToFiles: true,

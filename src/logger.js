@@ -21,12 +21,19 @@ export const globalEnv = {
  * You should definitely call configureLogger() before beginLogging().
  * Haven't you seen Ax Men? This is dangerous work!
  *
+ * The logger has a `gcp` option for type that logs to google cloud's standards.
+ * https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
+ *
  * @param {Object} args Arguments to configure the logger
- * @param {boolean} args.logToConsole Should lumberjack log to the Console?
+ * @param {Object} args.logToConsole Should lumberjack log to the Console?
+ * @param {Boolean} args.logToConsole.enabled Is logging to console enabled?
+ * @param {enum} args.logToConsole.type What style should the logger use?
+ * The `gcp` option is compatible with google cloud
+ * <string | gcp | pretty>
  * @param {boolean} args.logToFiles
  *  Should lumberjack log to .json files ./combined.log and ./error.log
  * @param {enum} args.logLevel <silly | debug | verbose | http | info | warn | error>
- * @param {Object} args.lokiConfig Loki transport config
+ * @param {object} args.lokiConfig Loki transport config
  * @param {string} args.lokiConfig.host Loki host URL
  * @param {string} args.lokiConfig.username Grafana Loki Username
  * @param {string} args.lokiConfig.apiKey Grafana Loki API Key
@@ -47,7 +54,7 @@ export function configureLogger ({
 
   if (!Object.isFrozen(globalEnv)) {
     globalEnv.logLevel = logLevel;
-    globalEnv.logToConsole = logToConsole;
+    globalEnv.logToConsole = logToConsole || { type: 'string', enabled: true };
     globalEnv.logToFiles = logToFiles;
     globalEnv.service = service;
 
@@ -131,6 +138,33 @@ export const hawtFormat = printf(({
   return message;
 });
 
+export const gcpFormat = printf(({
+  level,
+  message,
+  label,
+  timestamp,
+}) => {
+  const jsonPayload = {
+    level,
+    message,
+    label,
+    timestamp,
+  };
+
+  const gcpLog = {
+    jsonPayload,
+    timestamp,
+    logName: label,
+    severity: level,
+    labels: {
+      label,
+    },
+    stringPayload: message,
+  };
+
+  return JSON.stringify(gcpLog);
+});
+
 /**
  * Logger middleware
  * Intercepts the message and adds an id to it.
@@ -149,18 +183,25 @@ const {
  * You should definitely call configureLogger() before beginLogging().
  * Or don't then I get to pick what gets logged where!
  *
- * @param {Object} args Arguments to configure the logger
+ * The logger has a `gcp` option for type that logs to google cloud's standards.
+ * https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry
+ *
+ * @param {object} args Arguments to configure the logger
  * @param {string} args.name Name of this logging instance i.e. server.js
- * @param {boolean} args.logToConsole Change local log to console
+ * @param {object} args.logToConsole Change local log to console
+ * @param {boolean} args.logToConsole.enabled Is logging to console enabled?
+ * @param {enum} args.logToConsole.type What style should the logger use?
+ * The `gcp` option is compatible with google cloud
+ * <string | gcp | pretty>
  * @param {enum} args.logLevel Change local log level
  *  <silly | debug | verbose | http | info | warn | error>
- * @param {Boolean} args.logToFiles
+ * @param {boolean} args.logToFiles
  *  Should lumberjack log to .json files ./combined.log and ./error.log
  * @returns {Function}
  */
 export function beginLogging ({
   name,
-  logToConsole,
+  logToConsole = {},
   logLevel,
   logToFiles,
 }) {
@@ -179,7 +220,10 @@ export function beginLogging ({
   const toFiles = logToFiles || globalEnv.logToFiles || false;
 
   // default to true
-  const toConsole = logToConsole || globalEnv.logToConsole || true;
+  const toConsole = logToConsole.enabled || globalEnv.logToConsole.enabled || true;
+
+  // pretty is annoying in production
+  const type = logToConsole?.type || globalEnv.logToConsole.type || 'string';
 
   const service = globalEnv.service || 'my-saucy-logger';
 
@@ -192,16 +236,34 @@ export function beginLogging ({
     defaultMeta: { service },
   });
 
-  // deliberately not using NODE_ENV to eliminate unwanted consequences
   if (toConsole) {
-    logger.add(new transports.Console({
-      format: combine(
-        label({ label: name }),
-        timestamp(),
-        splat(),
-        hawtFormat,
-      ),
-    }));
+    if (type === 'pretty') {
+      logger.add(new transports.Console({
+        format: combine(
+          label({ label: name }),
+          timestamp(),
+          splat(),
+          hawtFormat,
+        ),
+      }));
+    } else if (type === 'gcp') {
+      logger.add(new transports.Console({
+        format: combine(
+          label({ label: name }),
+          timestamp(),
+          splat(),
+          gcpFormat,
+        ),
+      }));
+    } else {
+      logger.add(new transports.Console({
+        format: combine(
+          label({ label: name }),
+          timestamp(),
+          splat(),
+        ),
+      }));
+    }
   }
 
   // if we got toFiles log these bois

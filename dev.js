@@ -1,7 +1,10 @@
 import { beginLogging, configureLogger } from './src/logger.js';
 
 configureLogger({
-  logToConsole: true,
+  logToConsole: {
+    enabled: true,
+    type: 'gcp',
+  },
   logToFiles: false,
   lokiConfig: {
     sendLogs: false,
@@ -15,7 +18,10 @@ configureLogger({
 });
 
 configureLogger({
-  logToConsole: true,
+  logToConsole: {
+    enabled: true,
+    type: 'pretty',
+  },
   logToFiles: false,
   lokiConfig: {
     sendLogs: false,

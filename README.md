@@ -2,7 +2,7 @@
 
 It logs.
 
-You can configure lumberjack to log to the console, files, and Loki. It uses winston for logging and axios for http transport.
+You can configure lumberjack to log to the console (multiple formats), files, and Loki. It uses winston for logging and axios for http transport.
 
 This package has a custom Loki integration to specifically integrate with the Grafana Cloud API ([winston-loki](https://github.com/JaniAnttonen/winston-loki) has problems with authenticating to Grafana Cloud). The Loki integration also includes a cache that holds messages and sends them in groups to the Grafana endpoint. Being a cloud native, I haven't checked this against a local Loki instance 😭.
 
@@ -22,10 +22,14 @@ Configuration is passed as an object to `configureLogger()`. None of the paramet
 
 If `lokiConfig.apiKey`, `lokiConfig.host`, or `lokiConfig.username` are not included, Loki Transport is turned off.
 
+There are a few formats for the console logging: pretty, google cloud (`gcp`), or string. `pretty` is all fancy-like most useful for development, but terrible in production. `gcp` uses the [google cloud log format](https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry). `string` is a single line json string for more generic production use if you logging to the console. 
+
 #### parameters
 | name                       | type    | required | description                                        |
 | -------------------------- | ------- | -------- | -------------------------------------------------- |
-| `logToConsole`             | Boolean | No       | Should lumberjack log to the console?              |
+| `logToConsole`             | Object  | No       | Console configuration object                       |
+| `logToConsole.enable       | Boolean | No       | Should lumberjack log to the console?              |
+| `logToConsole.type         | Enum    | No       | What format should log to the console? `'pretty', 'gcp', 'string'`|
 | `logToFiles`               | Boolean | No       | Should lumberjack log to the file system? It logs to two files any error messages to `./error.log` and any other messages (less sever than error) to `./combined.log`. |
 | `logLevel`                 | Enum    | No       | `'error','warn', 'info', 'http', 'verbose', 'debug', 'silly'` The default is `silly`|
 | `service`                  | String  | No       | The name of the service to include this is included in the metadata that is sent to Loki so it is queryable. Default is `my-saucy-logger`  |
@@ -46,7 +50,10 @@ import { configureLogger } from '@sndwrks/lumberjack';
 
 // full configuration or "whole hog" as they say in the biz
 configureLogger({
-  logToConsole: true,
+  logToConsole: {
+    enabled: true,
+    type: 'pretty', // <pretty | gcp | string>
+  },
   logToFiles: true,
   lokiConfig: {
     sendLogs: true,
@@ -82,6 +89,7 @@ If you like this and want to contribute, well sweet. Just slap up a pr.
 
 ### to-do & desires
 
- - Tests
+ - Moar Tests
  - Typescript
  - Handle shutdown in some fashion
+ - More formats

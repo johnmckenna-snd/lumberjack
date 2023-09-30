@@ -5,7 +5,7 @@ configureLogger({
     enabled: true,
     type: 'gcp',
   },
-  logToFiles: false,
+  logToFiles: true,
   lokiConfig: {
     sendLogs: false,
     host: process.env.LOKI_HOST,

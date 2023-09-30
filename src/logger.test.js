@@ -25,9 +25,13 @@ const config = {
   },
 };
 
-const [errorPath] = globSync(['*.log']);
+function getErrorUrl () {
+  const [errorPath] = globSync(['*.log']);
 
-const errorUrl = new URL(`../${errorPath}`, import.meta.url);
+  const errorUrl = new URL(`../${errorPath}`, import.meta.url);
+
+  return errorUrl;
+}
 
 beforeAll(async () => {
   configureLogger(config);
@@ -88,7 +92,7 @@ test('logger should have logging functions', () => {
 });
 
 test('logger should have written a error.log file', async () => {
-  await readFile(errorUrl);
+  await readFile(getErrorUrl());
 });
 
 async function readFileByLine (stream, test) {
@@ -111,7 +115,7 @@ async function readFileByLine (stream, test) {
 }
 
 test('error.log lines should be json', async () => {
-  const stream = createReadStream(errorUrl);
+  const stream = createReadStream(getErrorUrl());
 
   await readFileByLine(stream, (line) => expect(typeof JSON.parse(line)).toBe('object'));
 });

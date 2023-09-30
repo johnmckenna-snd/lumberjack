@@ -1,9 +1,9 @@
 /* eslint-disable no-undef */
 import { readFile } from 'node:fs/promises';
 import * as readline from 'node:readline/promises';
-import { createReadStream, readSync } from 'node:fs';
+import { createReadStream } from 'node:fs';
+import { globSync } from 'glob';
 
-import { glob, globStream, globSync } from 'glob';
 import { configureLogger, beginLogging, globalEnv } from './logger.js';
 
 let logger;

@@ -2,6 +2,7 @@
 import { readFile } from 'node:fs/promises';
 import * as readline from 'node:readline/promises';
 import { createReadStream } from 'node:fs';
+import { globSync } from 'glob';
 
 import { configureLogger, beginLogging, globalEnv } from './logger.js';
 
@@ -24,8 +25,13 @@ const config = {
   },
 };
 
-const errorPath = new URL('../error.log', import.meta.url);
-const combinedPath = new URL('../combined.log', import.meta.url);
+function getErrorUrl () {
+  const [errorPath] = globSync(['*.log']);
+
+  const errorUrl = new URL(`../${errorPath}`, import.meta.url);
+
+  return errorUrl;
+}
 
 beforeAll(async () => {
   configureLogger(config);
@@ -86,11 +92,7 @@ test('logger should have logging functions', () => {
 });
 
 test('logger should have written a error.log file', async () => {
-  await readFile(errorPath);
-});
-
-test('logger should have written a combined.log file', async () => {
-  await readFile(combinedPath);
+  await readFile(getErrorUrl());
 });
 
 async function readFileByLine (stream, test) {
@@ -113,13 +115,7 @@ async function readFileByLine (stream, test) {
 }
 
 test('error.log lines should be json', async () => {
-  const stream = createReadStream(errorPath);
-
-  await readFileByLine(stream, (line) => expect(typeof JSON.parse(line)).toBe('object'));
-});
-
-test('combined.log lines should be json', async () => {
-  const stream = createReadStream(combinedPath);
+  const stream = createReadStream(getErrorUrl());
 
   await readFileByLine(stream, (line) => expect(typeof JSON.parse(line)).toBe('object'));
 });

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { createLogger, format, transports } from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 import chalk from 'chalk';
 import util from 'util';
 
@@ -268,8 +269,12 @@ export function beginLogging ({
 
   // if we got toFiles log these bois
   if (toFiles) {
-    logger.add(new transports.File({ filename: 'error.log', level: 'error' }));
-    logger.add(new transports.File({ filename: 'combined.log' }));
+    logger.add(new DailyRotateFile({
+      filename: 'log-%DATE%.log',
+      datePattern: 'YYYY-MM-DD-HH',
+      maxSize: '10m',
+      maxFiles: '7d',
+    }));
   }
 
   if (globalEnv.lokiConfig && globalEnv.lokiConfig.sendLogs) {

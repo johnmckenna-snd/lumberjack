@@ -3,6 +3,7 @@ import { createLogger, format, transports } from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import chalk from 'chalk';
 import util from 'util';
+import { existsSync, mkdirSync } from 'fs';
 
 import LokiCloudTransport from './lokiCloudTransport.js';
 
@@ -269,8 +270,14 @@ export function beginLogging ({
 
   // if we got toFiles log these bois
   if (toFiles) {
+    const dir = './logs';
+
+    if (!existsSync(dir)) {
+      mkdirSync(dir);
+    }
+
     logger.add(new DailyRotateFile({
-      filename: 'log-%DATE%.log',
+      filename: './logs/log-%DATE%.log',
       datePattern: 'YYYY-MM-DD-HH',
       maxSize: '10m',
       maxFiles: '7d',

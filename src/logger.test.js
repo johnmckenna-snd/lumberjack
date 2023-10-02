@@ -26,7 +26,7 @@ const config = {
 };
 
 function getErrorUrl () {
-  const [errorPath] = globSync(['*.log']);
+  const [errorPath] = globSync(['./logs/*.log']);
 
   const errorUrl = new URL(`../${errorPath}`, import.meta.url);
 

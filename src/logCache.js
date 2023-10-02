@@ -8,6 +8,8 @@ const logCacheEmitter = new LogCacheEmitter();
 let logCache = [];
 let globalLogCacheLimit = 10;
 let globalURL = '';
+let globalUsername = '';
+let globalPassword = '';
 
 function getLogCache () {
   return logCache;
@@ -26,6 +28,10 @@ async function addToCache (log) {
 
     const config = {
       'Content-Type': 'application/json',
+      auth: {
+        username: globalUsername,
+        password: globalPassword,
+      },
     };
 
     const body = {
@@ -42,9 +48,16 @@ async function addToCache (log) {
   }
 }
 
-logCacheEmitter.on('instantiate', ({ logCacheLimit, url }) => {
+logCacheEmitter.on('instantiate', ({
+  logCacheLimit,
+  url,
+  username,
+  password,
+}) => {
   globalLogCacheLimit = logCacheLimit;
-  globalURL = url;
+  globalURL = new URL(url);
+  globalUsername = username;
+  globalPassword = password;
 });
 
 // addToCache just runs as it will we don't wait for this promise to resolve

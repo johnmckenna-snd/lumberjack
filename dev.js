@@ -7,11 +7,11 @@ configureLogger({
   },
   logToFiles: true,
   lokiConfig: {
-    sendLogs: false,
+    sendLogs: true,
     host: process.env.LOKI_HOST,
     username: process.env.LOKI_USERNAME,
     apiKey: process.env.LOKI_API_KEY,
-    logCacheLimit: 10,
+    logCacheLimit: 1,
   },
   logLevel: 'silly',
   service: 'lumberjack-dev-test',

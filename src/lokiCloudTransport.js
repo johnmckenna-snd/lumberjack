@@ -35,9 +35,11 @@ class LokiCloudTransport extends Transport {
       label,
     } = info;
 
-    const url = `https://${this.username}:${this.apiKey}@logs-prod3.grafana.net/loki/api/v1/push`;
+    const url = 'https://logs-prod3.grafana.net/loki/api/v1/push';
 
-    logCacheEmitter.emit('instantiate', { url, logCacheLimit: this.logCacheLimit });
+    logCacheEmitter.emit('instantiate', {
+      url, username: this.username, password: this.apiKey, logCacheLimit: this.logCacheLimit,
+    });
 
     const tsUnixNs = new Date(timestamp).getTime() * 1000000;
 

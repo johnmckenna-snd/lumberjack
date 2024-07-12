@@ -51,6 +51,8 @@ logger.error('error! %o', bigObject);
 
 logger.error({ bigObject });
 
+logger.error('yeet', new Error('sheesh'));
+
 logger.warn({ warn: 'warning!', x: bigObject });
 
 logger.info('Pose purrfectly to show my beauty plan your travel or check cat door for ambush 10 times before coming in. Going to catch the red dot today going to catch the red dot today stare at ceiling, sleep on dog bed, force dog to sleep on floor, or lick butt. Scoot butt on the rug eat fish on floor. Licks paws dont wait for the storm to pass, dance in the rain for kitty kitty pussy cat doll. Scratch the box have my breakfast spaghetti yarn.');

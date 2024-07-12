@@ -103,10 +103,11 @@ export const hawtFormat = printf(({
   message,
   label,
   timestamp,
+  stack,
 }) => {
   function messageBuilder (levelMessage) {
     return `${chalk.gray('|')} ${levelMessage} ${chalk.grey('at')} ${chalk.green(`${timestamp}`)} ${chalk.grey('in')} ${chalk.bold(label)}
-  ${util.inspect(message, { showHidden: true, depth: null })} \n`;
+  ${util.inspect(message, { showHidden: true, depth: null })} \n ${stack ? `\n${stack}` : ''}`;
   }
 
   if (level === 'error') {
@@ -145,12 +146,14 @@ export const gcpFormat = printf(({
   message,
   label,
   timestamp,
+  stack,
 }) => {
   const jsonPayload = {
     level,
     message,
     label,
     timestamp,
+    stack: stack ? stack.replaceAll('\n') : null,
   };
 
   const gcpLog = {
@@ -177,6 +180,7 @@ const {
   label,
   timestamp,
   splat,
+  errors,
 } = format;
 
 /**
@@ -236,6 +240,7 @@ export function beginLogging ({
   const logger = createLogger({
     level,
     defaultMeta: { service },
+    format: errors({ stack: true }),
   });
 
   if (toConsole) {
@@ -281,6 +286,7 @@ export function beginLogging ({
       datePattern: 'YYYY-MM-DD-HH',
       maxSize: '10m',
       maxFiles: '7d',
+      format: format.json(),
     }));
   }
 

@@ -268,6 +268,7 @@ export function beginLogging ({
           label({ label: name }),
           timestamp(),
           splat(),
+          format.json(),
         ),
       }));
     }
